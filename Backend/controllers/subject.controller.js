@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 import { Subject } from "../models/subject.model.js"
 import { Course } from "../models/course.model.js"
 import { Faculty } from "../models/faculty.model.js"
+import { Student } from "../models/student.model.js"
 
 export const createSubject = async (req, res) => {
     try {
@@ -130,7 +131,7 @@ export const getSubjectById = async (req, res) => {
     }
 }
 
-export const getSubjectByCourse = async (req, res) => {
+export const getSubjectsOfCourse = async (req, res) => {
     try {
         const courseId = req.params.id
 
@@ -158,7 +159,7 @@ export const getSubjectByCourse = async (req, res) => {
 
         if(count === 0){
             return res.status(200).json({
-                message: "No subject found in this product",
+                message: "No subject found in this course",
                 count,
                 success: true
             })
@@ -307,9 +308,173 @@ export const updateSubject = async (req, res) => {
 
 export const deleteSubject = async (req, res) => {
     try {
+
+        const subjectId = req.params.id
+        const role = req.role
+
+        if(!mongoose.Types.ObjectId.isValid(subjectId)){
+            return res.status(400).json({
+                message: "Invalid Subject ID",
+                success: false
+            })
+        }
+
+        if(role !== "Admin"){
+            return res.status(403).json({
+                message: "Only admin can delete subject",
+                success: false
+            })
+        }
+
+        const subject = await Subject.findByIdAndDelete(subjectId)
+
+        if(!subject){
+            return res.status(404).json({
+                message: "Subject not found",
+                success: false
+            })
+        }
+
+        return res.status(200).json({
+            message: "Subject deleted successfully",
+            success: true
+        })
+
+
+    } catch (error) {
+        console.log("Error in deleteSubject: ",error)
+        return res.status(500).json({
+            message: "Internal Server Error",
+            success: false
+        })
+    }
+}
+
+
+export const getSubjectsForStudents = async (req, res) => {
+    try {
+        const userId = req.id
+        const role = req.role
+
+        if(!mongoose.Types.ObjectId.isValid(userId)){
+            return res.status(400).json({
+                message: "Invalid ID",
+                success: false
+            })
+        }
+
+        if(role !== "Student"){
+            return res.status(403).json({
+                message: "Only students can see",
+                success: false
+            })
+        }
+
+        const student = await Student.findById(userId)
+
+        if(!student){
+            return res.status(404).json({
+                message: "Student not found",
+                success: false
+            })
+        }
+
+        const {courseId, semester} = student
+
+        const subjects = await Subject.find({
+            courseId,
+            semester
+        })
+
+        if(subjects.length === 0){
+            return res.status(200).json({
+                message: "Subjects not found",
+                success: true
+            })
+        }
+
+        return res.status(200).json({
+            subjects,
+            message: "Subjects found",
+            success: true
+        })
         
     } catch (error) {
-        console.log(error)
+        console.log("Error in getSubjectsForStudents: ",error)
+        return res.status(500).json({
+            message: "Internal Server Error",
+            success: false
+        })
+    }
+}
+
+
+export const getSubjectByCourseAndSemester = async (req, res) => {
+    try {
+        const courseId = req.params.courseId
+        const semester = Number(req.params.semester)
+        const role = req.role
+
+        if(role !== "Admin" && role !== "Faculty"){
+            return res.status(403).json({
+                message: "Only admins and faculties have access",
+                success: false
+            })
+        }
+
+        if(!mongoose.Types.ObjectId.isValid(courseId)){
+            return res.status(400).json({
+                message: "Invalid Course ID",
+                success: false
+            })
+        }
+
+        if (!semester || semester <= 0) {
+            return res.status(400).json({
+                message: "Invalid semester",
+                success: false
+            })
+        }
+
+        const course = await Course.findById(courseId)
+
+        if(!course){
+            return res.status(404).json({
+                message: "Course not found",
+                success: false
+            })
+        }
+
+        const {semesters} = course
+
+        if(semesters < semester){
+            return res.status(400).json({
+                message: "Enter valid semester",
+                success: false
+            })
+        }
+
+        const subjects = await Subject.find({
+            courseId,
+            semester
+        })
+
+        if(subjects.length === 0){
+            return res.status(200).json({
+                subjects: [],
+                message: "No subject found",
+                success: true
+            })
+        }
+
+        return res.status(200).json({
+            subjects,
+            message: "Subjects found",
+            success: true
+        })
+
+    } catch (error) {
+        console.log("Error in getSubjectByCourseAndSemester: ", error)
         return res.status(500).json({
             message: "Internal Server Error",
             success: false
