@@ -70,7 +70,7 @@ export const createSubject = async (req, res) => {
             })
         }
 
-        await Subject.create({
+        const subject = await Subject.create({
             name,
             code,
             courseId,
@@ -80,6 +80,7 @@ export const createSubject = async (req, res) => {
         })
 
         return res.status(201).json({
+            subject,
             message: "Subject created successfully",
             success: true
         })
@@ -475,6 +476,149 @@ export const getSubjectByCourseAndSemester = async (req, res) => {
 
     } catch (error) {
         console.log("Error in getSubjectByCourseAndSemester: ", error)
+        return res.status(500).json({
+            message: "Internal Server Error",
+            success: false
+        })
+    }
+}
+
+
+export const assignSubjectToFaculty = async (req, res) => {
+    try {
+        const subjectId = req.params.id
+        const {facultyId} = req.body
+        const role = req.role
+
+        if(!mongoose.Types.ObjectId.isValid(subjectId)){
+            return res.status(400).json({
+                message: "Invalid ID",
+                success: false
+            })
+        }
+
+        if(!mongoose.Types.ObjectId.isValid(facultyId)){
+            return res.status(400).json({
+                message: "Invalid ID",
+                success: false
+            })
+        }
+
+        if(role !== "Admin"){
+            return res.status(403).json({
+                message: "Only Admin can assign",
+                success: false
+            })
+        }
+
+        let subject = await Subject.findById(subjectId)
+        const faculty = await Faculty.findById(facultyId)
+        .populate("userId", "name")
+
+        if(!subject){
+            return res.status(404).json({
+                message: "Subject not found",
+                success: false
+            })
+        }
+
+        if(!faculty){
+            return res.status(404).json({
+                message: "Faculty not found",
+                success: false
+            })
+        }
+
+
+        if (subject.facultyId && subject.facultyId.toString() === facultyId){
+            return res.status(400).json({
+                message: "Faculty already assigned to this subject",
+                success: false
+            })
+        }
+
+        subject.facultyId = facultyId
+        await subject.save()
+
+        faculty.subjectAssigned.push(subject._id)
+        await faculty.save()
+
+        return res.status(200).json({
+            message: `${faculty.userId?.name} is assigned to ${subject.name}`,
+            success: true
+        })
+
+    } catch (error) {
+        console.log("Error in assignSubjectToFaculty: ", error)
+        return res.status(500).json({
+            message: "Internal Server Error",
+            success: false
+        })
+    }
+}
+
+export const getSubjectsForFaculty = async (req, res) => {
+    try {
+        const role = req.role
+        let facultyId
+
+        if (role === "Faculty") {
+            facultyId = req.id
+        }
+        else if (role === "Admin") {
+            facultyId = req.params.id
+        } 
+        else {
+            return res.status(403).json({
+                message: "Access denied",
+                success: false
+            })
+        }
+
+        if(!mongoose.Types.ObjectId.isValid(facultyId)){
+            return res.status(400).json({
+                message: "Invalid ID",
+                success: false
+            })
+        }
+
+        const faculty = await Faculty.findById(facultyId)
+        .populate({
+            path: "subjectAssigned",
+            select: "name code semester courseId",
+            populate: {
+                path: "courseId",
+                select: "name"
+            }
+        })
+
+        if(!faculty){
+            return res.status(404).json({
+                message: "Faculty not found",
+                success: false
+            })
+        }
+
+        const subjects = faculty.subjectAssigned
+        let count = subjects.length
+
+        if(count === 0){
+            return res.status({
+                message: "No subject assigned",
+                success: true
+            })
+        }
+
+        return res.status(200).json({
+            count,
+            subjects,
+            message: "Subject found",
+            success: true
+        })
+
+
+    } catch (error) {
+        console.log("Error in getSubjectsForFaculty: ", error)
         return res.status(500).json({
             message: "Internal Server Error",
             success: false
