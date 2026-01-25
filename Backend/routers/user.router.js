@@ -1,9 +1,9 @@
-import exprss from "express"
+import express from "express"
 import { verifyEmail, verifyOtp } from "../controllers/email.controller.js"
 import { login, logout, register } from "../controllers/user.controller.js"
 import { upload } from "../middlewares/multer.js"
 
-const router = exprss.Router()
+const router = express.Router()
 
 router.route("/verify-email").post(verifyEmail)
 router.route("/verify-otp").post(verifyOtp)

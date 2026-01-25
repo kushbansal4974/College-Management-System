@@ -6,6 +6,7 @@ import connectDB from "./utils/db.js"
 import userRoute from "./routers/user.router.js"
 import departmentRoute from "./routers/department.route.js"
 import courseRoute from "./routers/course.route.js"
+import subjectRoute from "./routers/subject.router.js"
 
 const app = express()
 
@@ -31,6 +32,7 @@ const PORT = process.env.PORT || 3000
 app.use("/api/v1/user", userRoute)
 app.use("/api/v1/department", departmentRoute)
 app.use("/api/v1/course", courseRoute)
+app.use("/api/v1/subject", subjectRoute)
 
 app.listen(PORT, ()=>{
     connectDB()
