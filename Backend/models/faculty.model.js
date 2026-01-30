@@ -13,6 +13,7 @@ const facultySchema = new mongoose.Schema({
     },
     designation:{
         type: String,
+        enum: ["sr. faculty", "jr. faculty", "dy. hod", "hod"],
         required: true
     },
     qualification:{
@@ -26,7 +27,7 @@ const facultySchema = new mongoose.Schema({
     subjectAssigned:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Subject",
-        required: true
+        default: null
     }],
     mobile: {
         type: String,
