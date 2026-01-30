@@ -139,8 +139,7 @@ http://localhost:8000
 ## 👨‍💻 Author
 
 **Kush**  
-B.Tech Computer Science  
-Backend Developer
+B.Tech Computer Science
 
 ---
 
