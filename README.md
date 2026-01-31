@@ -99,6 +99,19 @@ Create a `.env` file in root directory:
 
 ```JWT_SECRET=your_secret_key```
 
+### For Cloudinary
+
+```CLOUD_NAME=your_cloudinary_name```
+
+```API_KEY=your_api_key```
+
+```API_SECRET=your_api_secret```
+
+### For SMTP setup
+
+```SMTP_EMAIL=your_smtp_email"```
+
+```SMTP_PASS-your_smtp_password```
 
 ---
 
