@@ -93,9 +93,11 @@ College-Management-System/
 
 Create a `.env` file in root directory:
 
-PORT=8000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
+```PORT=8000```
+
+```MONGO_URI=your_mongodb_connection_string```
+
+```JWT_SECRET=your_secret_key```
 
 
 ---
